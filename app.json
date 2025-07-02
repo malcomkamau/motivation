@@ -1,35 +1,42 @@
 {
   "expo": {
-    "name": "motivation",
+    "name": "Motivation",
     "slug": "motivation",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.jpeg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/logo.jpeg",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#121212",
+      "dark": {
+        "image": "./assets/logo.jpeg",
+        "backgroundColor": "#121212"
+      }
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/logo.jpeg",
+        "backgroundColor": "#121212"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.malcomkamau.motivation"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo.jpeg"
     },
     "extra": {
       "eas": {
         "projectId": "efcd44cc-0ad4-45d9-abf7-da2d0e90bbed"
       }
-    }
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }
