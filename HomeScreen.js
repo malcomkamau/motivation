@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, FlatList, Dimensions, TouchableOpacity,
-    Modal, Pressable, Share, Alert, Image
+    Modal, Pressable, Share, Alert, Image, RefreshControl
 } from 'react-native';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -13,6 +13,7 @@ import {
     getQuotes
 } from './quotesDb';
 import { getUserByEmail } from './userDb';
+import { registerForPushNotificationsAsync, sendTestNotification } from './NotificationHelper';
 
 export default function HomeScreen() {
     const { height } = Dimensions.get('window');
@@ -28,6 +29,7 @@ export default function HomeScreen() {
     const [favorites, setFavorites] = useState([]);
     const [userEmail, setUserEmail] = useState(null);
     const [avatar, setAvatar] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
 
     const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
     const onViewableItemsChanged = useRef(({ viewableItems }) => {
@@ -36,50 +38,63 @@ export default function HomeScreen() {
         }
     }).current;
 
+    const shuffleArray = (arr) =>
+        arr
+            .map(value => ({ value, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ value }) => value);
+
+    const loadData = async () => {
+        try {
+            const email = await AsyncStorage.getItem('currentUser');
+            setUserEmail(email);
+
+            const user = await getUserByEmail(email);
+            if (user?.avatar) setAvatar(user.avatar);
+
+            const storedQuotes = await getQuotes();
+            const storedFavorites = email ? await getFavorites(email) : [];
+
+            const prefKey = `preferences_${email}`;
+            const storedPrefs = await AsyncStorage.getItem(prefKey);
+            const preferences = storedPrefs
+                ? JSON.parse(storedPrefs).map(p => p.toLowerCase())
+                : [];
+
+            const filteredQuotes =
+                preferences.length === 0
+                    ? storedQuotes
+                    : storedQuotes.filter(q => preferences.includes(q.category));
+
+            const shuffled = shuffleArray(filteredQuotes);
+
+            if (shuffled.length === 0) {
+                Alert.alert(
+                    'No Quotes Found',
+                    'Your current preferences returned no results. Try changing them in your profile.'
+                );
+            }
+
+            setFavorites(storedFavorites || []);
+            setQuotes(shuffled || []);
+            setCurrentQuote(shuffled[0] || null);
+
+        } catch (err) {
+            console.error('Error loading data:', err);
+            Alert.alert('Error', 'Failed to load quotes.');
+        }
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadData();
+        setRefreshing(false);
+    };
+
     useEffect(() => {
         if (isFocused) {
-            const loadData = async () => {
-                try {
-                    const email = await AsyncStorage.getItem('currentUser');
-                    setUserEmail(email);
-
-                    const user = await getUserByEmail(email);
-                    if (user?.avatar) setAvatar(user.avatar);
-
-                    const storedQuotes = await getQuotes();
-                    const storedFavorites = email ? await getFavorites(email) : [];
-
-                    const prefKey = `preferences_${email}`;
-                    const storedPrefs = await AsyncStorage.getItem(prefKey);
-                    const preferences = storedPrefs
-                        ? JSON.parse(storedPrefs).map(p => p.toLowerCase())
-                        : [];
-
-                    const filteredQuotes =
-                        preferences.length === 0
-                            ? storedQuotes
-                            : storedQuotes.filter(q =>
-                                preferences.includes(q.category)
-                            );
-
-                    if (filteredQuotes.length === 0) {
-                        Alert.alert(
-                            'No Quotes Found',
-                            'Your current preferences returned no results. Try changing them in your profile.'
-                        );
-                    }
-
-                    setFavorites(storedFavorites || []);
-                    setQuotes(filteredQuotes || []);
-                    setCurrentQuote(filteredQuotes[0] || null);
-
-                } catch (err) {
-                    console.error('Error loading data:', err);
-                    Alert.alert('Error', 'Failed to load quotes.');
-                }
-            };
-
             loadData();
+            registerForPushNotificationsAsync();
         }
     }, [isFocused]);
 
@@ -179,6 +194,13 @@ export default function HomeScreen() {
                 snapToAlignment="start"
                 decelerationRate="fast"
                 contentContainerStyle={{ flexGrow: 1 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#7f5af0"
+                    />
+                }
             />
 
             {/* Bottom Navigation */}
@@ -220,8 +242,13 @@ export default function HomeScreen() {
                         {favorites.some(q => q.id === currentQuote?.id) ? 'Saved' : 'Favorite'}
                     </Text>
                 </TouchableOpacity>
-            </View>
 
+                <TouchableOpacity style={{ alignItems: 'center' }} onPress={sendTestNotification}>
+                    <Ionicons name="notifications-outline" size={22} color={themedColor} />
+                    <Text style={{ fontSize: 12, color: themedColor, marginTop: 4 }}>Notify</Text>
+                </TouchableOpacity>
+
+            </View>
 
             {/* Share Modal */}
             <Modal

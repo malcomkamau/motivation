@@ -93,7 +93,7 @@ export default function ReminderScreen() {
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Daily Motivation 💫',
+          title: 'Daily Motivation',
           body: `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`,
         },
         trigger,
@@ -169,6 +169,7 @@ export default function ReminderScreen() {
           <View key={idx} style={[styles.card, { backgroundColor: isDark ? '#1f1f1f' : '#f9f6ff' }]}>
             <View style={styles.timeHeader}>
               <Text style={[styles.timeText, { color: textColor }]}>Reminder {idx + 1}: {formatTime(time)}</Text>
+
               {idx > 0 && (
                 <TouchableOpacity onPress={() => removeTime(idx)}>
                   <MaterialIcons name="delete-outline" size={22} color="red" />
@@ -176,12 +177,24 @@ export default function ReminderScreen() {
               )}
             </View>
 
-            <Button
-              title="Edit Time"
-              onPress={() => setShowPickerIndex(idx)}
-              disabled={!enabled}
-              color="#7f5af0"
-            />
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                style={[styles.button, styles.editButton, !enabled && styles.disabled]}
+                onPress={() => setShowPickerIndex(idx)}
+                disabled={!enabled}
+              >
+                <Text style={styles.buttonText}>Edit Time</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, styles.deleteButton, !enabled && styles.disabled]}
+                onPress={() => removeTime(idx)}
+                disabled={!enabled}
+              >
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+
 
             {showPickerIndex === idx && (
               <DateTimePicker
@@ -266,5 +279,30 @@ const styles = StyleSheet.create({
     color: '#7f5af0',
     fontSize: 16,
     fontWeight: '500',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginTop: 8,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#7f5af0',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

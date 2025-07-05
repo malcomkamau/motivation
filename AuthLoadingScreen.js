@@ -38,7 +38,7 @@ export default function AuthLoadingScreen() {
       const isConnected = netState.isConnected;
 
       if (quoteCount < 100 && isConnected) {
-        console.log(`📉 Only ${quoteCount} quotes. Fetching more...`);
+        console.log(`Only ${quoteCount} quotes. Fetching more...`);
         const fetched = await fetchQuotesFromAPI();
         const updated = [...storedQuotes, ...fetched];
         const finalQuotes = updated.length > 100 ? fetched : updated;
@@ -64,7 +64,7 @@ export default function AuthLoadingScreen() {
       setIsWaitingForInternet(false);
       proceedToApp();
     } catch (err) {
-      console.error('❌ Startup error:', err);
+      console.error('Startup error:', err);
       Alert.alert('Error', 'Something went wrong during app initialization.');
       setIsLoading(false);
     }
@@ -75,7 +75,7 @@ export default function AuthLoadingScreen() {
 
     const unsubscribe = NetInfo.addEventListener((state) => {
       if (state.isConnected && isWaitingForInternet) {
-        console.log('🔄 Reconnected. Retrying...');
+        console.log('Reconnected. Retrying...');
         fetchAndStoreQuotes();
       }
     });
