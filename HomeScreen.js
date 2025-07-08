@@ -1,11 +1,13 @@
+// HomeScreen.js
 import React, { useState, useRef, useEffect } from 'react';
 import {
     View, Text, FlatList, Dimensions, TouchableOpacity,
-    Modal, Pressable, Share, Alert, Image, RefreshControl
+    Modal, Pressable, Share, Alert, Image, RefreshControl, Animated
 } from 'react-native';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
 
 import { useThemeContext } from './context/ThemeContext';
 import {
@@ -13,7 +15,7 @@ import {
     getQuotes
 } from './quotesDb';
 import { getUserByEmail } from './userDb';
-import { registerForPushNotificationsAsync, sendTestNotification } from './NotificationHelper';
+import { registerForPushNotificationsAsync } from './NotificationHelper';
 
 export default function HomeScreen() {
     const { height } = Dimensions.get('window');
@@ -30,13 +32,22 @@ export default function HomeScreen() {
     const [userEmail, setUserEmail] = useState(null);
     const [avatar, setAvatar] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
     const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
     const onViewableItemsChanged = useRef(({ viewableItems }) => {
         if (viewableItems.length > 0) {
             setCurrentQuote(viewableItems[0].item);
+            fadeAnim.setValue(0);
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 500,
+                useNativeDriver: true,
+            }).start();
         }
     }).current;
+
+    const flatListRef = useRef(null);
 
     const shuffleArray = (arr) =>
         arr
@@ -61,12 +72,14 @@ export default function HomeScreen() {
                 ? JSON.parse(storedPrefs).map(p => p.toLowerCase())
                 : [];
 
-            const filteredQuotes =
+            let filteredQuotes =
                 preferences.length === 0
                     ? storedQuotes
                     : storedQuotes.filter(q => preferences.includes(q.category));
 
-            const shuffled = shuffleArray(filteredQuotes);
+            let shuffled = shuffleArray(filteredQuotes);
+
+            if (shuffled.length > 100) shuffled = shuffled.slice(0, 100);
 
             if (shuffled.length === 0) {
                 Alert.alert(
@@ -101,7 +114,7 @@ export default function HomeScreen() {
     const handleShare = async () => {
         try {
             const message = currentQuote
-                ? `"${currentQuote.text}"\n— ${currentQuote.author || 'Unknown'}\n\nShared from Motivation App 💫`
+                ? `"${currentQuote.text}"\n— ${currentQuote.author || 'Unknown'}\n\nShared from Motivation App 🌛`
                 : '';
             await Share.share({ message });
             setModalVisible(false);
@@ -122,68 +135,43 @@ export default function HomeScreen() {
 
         const updatedFavorites = await getFavorites(userEmail);
         setFavorites(updatedFavorites || []);
+
+        Toast.show({
+            type: isFavorite ? 'info' : 'success',
+            text1: isFavorite ? 'Removed from favorites' : 'Added to favorites',
+        });
     };
 
     const themedColor = isDark ? '#fff' : '#000';
     const bgColor = isDark ? '#121212' : '#f6f0fc';
 
     const renderItem = ({ item }) => (
-        <View style={{
+        <Animated.View style={{
+            opacity: fadeAnim,
             height,
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 20,
             paddingVertical: 40,
         }}>
-            <Text style={{
-                fontSize: 24,
-                textAlign: 'center',
-                fontWeight: '500',
-                color: themedColor
-            }}>
-                {item.text}
-            </Text>
-            <Text style={{
-                fontSize: 16,
-                marginTop: 10,
-                fontStyle: 'italic',
-                textAlign: 'center',
-                color: isDark ? '#aaa' : '#555'
-            }}>
-                — {item.author || 'Unknown'}
-            </Text>
-        </View>
+            <Text style={{ fontSize: 24, textAlign: 'center', fontWeight: '500', color: themedColor }}>{item.text}</Text>
+            <Text style={{ fontSize: 16, marginTop: 10, fontStyle: 'italic', textAlign: 'center', color: isDark ? '#aaa' : '#555' }}>— {item.author || 'Unknown'}</Text>
+        </Animated.View>
     );
 
     return (
         <View style={{ flex: 1, backgroundColor: bgColor }}>
-            {/* Top Bar */}
-            <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingHorizontal: 20,
-                paddingTop: 50,
-                paddingBottom: 10,
-                backgroundColor: bgColor,
-                borderBottomWidth: 1,
-                borderBottomColor: isDark ? '#444' : '#ddd'
-            }}>
+            {/* Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10, backgroundColor: bgColor, borderBottomWidth: 1, borderBottomColor: isDark ? '#444' : '#ddd' }}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#7f5af0' }}>Motivation</Text>
                 <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
-                    {avatar ? (
-                        <Image
-                            source={{ uri: avatar }}
-                            style={{ width: 32, height: 32, borderRadius: 16 }}
-                        />
-                    ) : (
-                        <Ionicons name="person-circle-outline" size={32} color="#7f5af0" />
-                    )}
+                    {avatar ? <Image source={{ uri: avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} /> : <Ionicons name="person-circle-outline" size={32} color="#7f5af0" />}
                 </TouchableOpacity>
             </View>
 
-            {/* Quotes List */}
+            {/* Quotes */}
             <FlatList
+                ref={flatListRef}
                 data={quotes}
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
@@ -194,171 +182,65 @@ export default function HomeScreen() {
                 snapToAlignment="start"
                 decelerationRate="fast"
                 contentContainerStyle={{ flexGrow: 1 }}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor="#7f5af0"
-                    />
-                }
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? '#fff' : '#7f5af0'} colors={[isDark ? '#fff' : '#7f5af0']} />}
             />
 
-            {/* Bottom Navigation */}
-            <View style={{
-                position: 'absolute',
-                bottom: 30,
-                alignSelf: 'center',
-                backgroundColor: isDark ? '#1e1e1e' : '#fff',
-                borderRadius: 30,
-                flexDirection: 'row',
-                paddingVertical: 14,
-                paddingHorizontal: 30,
-                shadowColor: '#000',
-                shadowOpacity: 0.1,
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 8,
-                elevation: 8,
-                width: '90%',
-                justifyContent: 'space-evenly'
-            }}>
-                {/* Share Button */}
+            {/* Favorite & Share */}
+            <View style={{ position: 'absolute', bottom: 30, alignSelf: 'center', backgroundColor: isDark ? '#1e1e1e' : '#fff', borderRadius: 30, flexDirection: 'row', paddingVertical: 14, paddingHorizontal: 30, shadowColor: '#000', shadowOpacity: 0.1, shadowOffset: { width: 0, height: 4 }, shadowRadius: 8, elevation: 8, width: '90%', justifyContent: 'space-evenly' }}>
                 <TouchableOpacity style={{ alignItems: 'center' }} onPress={() => setModalVisible(true)}>
                     <FontAwesome name="share-alt" size={22} color={themedColor} />
                     <Text style={{ fontSize: 12, color: themedColor, marginTop: 4 }}>Share</Text>
                 </TouchableOpacity>
 
-                {/* Favorite Toggle */}
                 <TouchableOpacity style={{ alignItems: 'center' }} onPress={toggleFavorite}>
-                    <FontAwesome
-                        name={favorites.some(q => q.id === currentQuote?.id) ? 'heart' : 'heart-o'}
-                        size={22}
-                        color={favorites.some(q => q.id === currentQuote?.id) ? 'red' : themedColor}
-                    />
-                    <Text style={{
-                        fontSize: 12,
-                        color: favorites.some(q => q.id === currentQuote?.id) ? 'red' : themedColor,
-                        marginTop: 4
-                    }}>
-                        {favorites.some(q => q.id === currentQuote?.id) ? 'Saved' : 'Favorite'}
-                    </Text>
+                    <FontAwesome name={favorites.some(q => q.id === currentQuote?.id) ? 'heart' : 'heart-o'} size={22} color={favorites.some(q => q.id === currentQuote?.id) ? 'red' : themedColor} />
+                    <Text style={{ fontSize: 12, color: favorites.some(q => q.id === currentQuote?.id) ? 'red' : themedColor, marginTop: 4 }}>{favorites.some(q => q.id === currentQuote?.id) ? 'Saved' : 'Favorite'}</Text>
                 </TouchableOpacity>
-
-                <TouchableOpacity style={{ alignItems: 'center' }} onPress={sendTestNotification}>
-                    <Ionicons name="notifications-outline" size={22} color={themedColor} />
-                    <Text style={{ fontSize: 12, color: themedColor, marginTop: 4 }}>Notify</Text>
-                </TouchableOpacity>
-
             </View>
 
             {/* Share Modal */}
-            <Modal
-                visible={modalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)'
-                }}>
-                    <View style={{
-                        width: '80%',
-                        backgroundColor: bgColor,
-                        padding: 20,
-                        borderRadius: 24,
-                        elevation: 5
-                    }}>
+            <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
+                <Pressable style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={() => setModalVisible(false)}>
+                    <View style={{ width: '80%', backgroundColor: bgColor, padding: 20, borderRadius: 24, elevation: 5 }}>
                         <View style={{ alignItems: 'center', marginBottom: 10 }}>
                             <FontAwesome name="share-alt" size={24} color={themedColor} />
-                            <Text style={{ fontSize: 18, fontWeight: '600', marginTop: 10, color: themedColor }}>
-                                Share with friends
-                            </Text>
+                            <Text style={{ fontSize: 18, fontWeight: '600', marginTop: 10, color: themedColor }}>Share with friends</Text>
                         </View>
-
-                        <Text style={{ textAlign: 'center', marginVertical: 10, color: themedColor }}>
-                            {currentQuote?.text}
-                        </Text>
-                        <Text style={{ textAlign: 'center', fontStyle: 'italic', color: isDark ? '#aaa' : '#555' }}>
-                            — {currentQuote?.author || 'Unknown'}
-                        </Text>
-
+                        <Text style={{ textAlign: 'center', marginVertical: 10, color: themedColor }}>{currentQuote?.text}</Text>
+                        <Text style={{ textAlign: 'center', fontStyle: 'italic', color: isDark ? '#aaa' : '#555' }}>— {currentQuote?.author || 'Unknown'}</Text>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>
-                            <Pressable
-                                onPress={handleShare}
-                                style={{
-                                    backgroundColor: isDark ? '#333' : '#e5d7fc',
-                                    paddingHorizontal: 20,
-                                    paddingVertical: 10,
-                                    borderRadius: 20
-                                }}>
+                            <Pressable onPress={handleShare} style={{ backgroundColor: isDark ? '#333' : '#e5d7fc', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 }}>
                                 <Text style={{ color: themedColor }}>Share</Text>
                             </Pressable>
-
                             <Pressable onPress={() => setModalVisible(false)}>
                                 <Text style={{ color: '#7f5af0', padding: 10 }}>Cancel</Text>
                             </Pressable>
                         </View>
                     </View>
-                </View>
+                </Pressable>
             </Modal>
 
             {/* Profile Dropdown */}
-            <Modal
-                visible={profileMenuVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setProfileMenuVisible(false)}
-            >
-                <Pressable
-                    onPress={() => setProfileMenuVisible(false)}
-                    style={{ flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}
-                >
-                    <View style={{
-                        position: 'absolute',
-                        top: 90,
-                        right: 20,
-                        backgroundColor: bgColor,
-                        borderRadius: 10,
-                        paddingVertical: 10,
-                        width: 180,
-                        shadowColor: '#000',
-                        shadowOpacity: 0.1,
-                        shadowRadius: 10,
-                        elevation: 5
-                    }}>
-                        <Pressable onPress={() => {
-                            setProfileMenuVisible(false);
-                            navigation.navigate('Profile');
-                        }} style={{ padding: 12 }}>
+            <Modal visible={profileMenuVisible} transparent animationType="fade" onRequestClose={() => setProfileMenuVisible(false)}>
+                <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' }} onPress={() => setProfileMenuVisible(false)}>
+                    <View style={{ position: 'absolute', top: 90, right: 20, backgroundColor: bgColor, borderRadius: 10, paddingVertical: 10, width: 180, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 }}>
+                        <Pressable onPress={() => { setProfileMenuVisible(false); navigation.navigate('Profile'); }} style={{ padding: 12 }}>
                             <Text style={{ color: themedColor }}>View Profile</Text>
                         </Pressable>
-
-                        <Pressable onPress={() => {
-                            setProfileMenuVisible(false);
-                            navigation.navigate('Favorites');
-                        }} style={{ padding: 12 }}>
+                        <Pressable onPress={() => { setProfileMenuVisible(false); navigation.navigate('Favorites'); }} style={{ padding: 12 }}>
                             <Text style={{ color: themedColor }}>Favorites</Text>
                         </Pressable>
-
-                        <Pressable onPress={() => {
-                            setProfileMenuVisible(false);
-                            navigation.navigate('Settings');
-                        }} style={{ padding: 12 }}>
+                        <Pressable onPress={() => { setProfileMenuVisible(false); navigation.navigate('Settings'); }} style={{ padding: 12 }}>
                             <Text style={{ color: themedColor }}>Settings</Text>
                         </Pressable>
-
-                        <Pressable onPress={async () => {
-                            await AsyncStorage.removeItem('currentUser');
-                            setProfileMenuVisible(false);
-                            navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-                        }} style={{ padding: 12 }}>
+                        <Pressable onPress={async () => { await AsyncStorage.removeItem('currentUser'); setProfileMenuVisible(false); navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); }} style={{ padding: 12 }}>
                             <Text style={{ color: 'red' }}>Logout</Text>
                         </Pressable>
                     </View>
                 </Pressable>
             </Modal>
+
+            <Toast />
         </View>
     );
 }

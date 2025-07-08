@@ -1,17 +1,20 @@
+// ReminderScreen.js
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, Platform, Button, Alert, StyleSheet, FlatList, TouchableOpacity
+  View, Text, Alert, StyleSheet, TouchableOpacity, Platform, ScrollView
 } from 'react-native';
+import * as Animatable from 'react-native-animatable';
 import * as Notifications from 'expo-notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import SwitchToggle from 'react-native-switch-toggle';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 
 import HeaderBar from './components/HeaderBar';
 import { useThemeContext } from './context/ThemeContext';
 import { getQuotes } from './quotesDb';
+import { registerForPushNotificationsAsync, sendTestNotification } from './NotificationHelper';
 
 export default function ReminderScreen() {
   const [enabled, setEnabled] = useState(false);
@@ -24,24 +27,15 @@ export default function ReminderScreen() {
   const textColor = isDark ? '#fff' : '#000';
 
   useEffect(() => {
-    requestPermission();
+    registerForPushNotificationsAsync();
     loadReminderSettings();
   }, []);
-
-  const requestPermission = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'Enable notifications to receive quotes.');
-    }
-  };
 
   const loadReminderSettings = async () => {
     const saved = await AsyncStorage.getItem('reminderTimes');
     const enabledFlag = await AsyncStorage.getItem('reminderEnabled');
     if (saved) setTimes(JSON.parse(saved).map(t => new Date(t)));
-    if (enabledFlag === 'true') {
-      setEnabled(true);
-    }
+    if (enabledFlag === 'true') setEnabled(true);
   };
 
   const saveSettings = async (newTimes) => {
@@ -85,22 +79,25 @@ export default function ReminderScreen() {
 
     for (let date of timeArray) {
       const randomQuote = filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)];
+
       const trigger = {
         hour: date.getHours(),
         minute: date.getMinutes(),
+        second: 0,
         repeats: true,
       };
 
+      console.log('Scheduling at', trigger);
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Daily Motivation',
+          title: '🌟 Daily Motivation',
           body: `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`,
         },
         trigger,
       });
     }
 
-    Toast.show({ type: 'success', text1: 'Reminders scheduled with quotes' });
+    Toast.show({ type: 'success', text1: 'Reminders scheduled!' });
   };
 
   const cancelAllNotifications = async () => {
@@ -143,9 +140,8 @@ export default function ReminderScreen() {
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
       <HeaderBar title="Daily Reminder" />
-      <View style={styles.content}>
-
-        <View style={styles.toggleRow}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Animatable.View animation="fadeInDown" delay={50} style={styles.toggleRow}>
           <Text style={[styles.label, { color: textColor }]}>Enable Daily Quotes</Text>
           <SwitchToggle
             switchOn={enabled}
@@ -157,24 +153,29 @@ export default function ReminderScreen() {
             containerStyle={styles.switchContainer}
             circleStyle={styles.switchCircle}
           />
-        </View>
+        </Animatable.View>
 
         {enabled && (
           <Text style={[styles.infoText, { color: isDark ? '#aaa' : '#555' }]}>
-            You’ll receive a motivational quote at these times:
+            You’ll receive motivational quotes daily at the selected time(s):
           </Text>
         )}
 
+        {/* Time Cards */}
         {times.map((time, idx) => (
-          <View key={idx} style={[styles.card, { backgroundColor: isDark ? '#1f1f1f' : '#f9f6ff' }]}>
+          <Animatable.View
+            key={idx}
+            animation="fadeInUp"
+            delay={idx * 100}
+            style={[styles.card, { backgroundColor: isDark ? '#1f1f1f' : '#f9f6ff' }]}
+          >
             <View style={styles.timeHeader}>
-              <Text style={[styles.timeText, { color: textColor }]}>Reminder {idx + 1}: {formatTime(time)}</Text>
-
-              {idx > 0 && (
-                <TouchableOpacity onPress={() => removeTime(idx)}>
-                  <MaterialIcons name="delete-outline" size={22} color="red" />
-                </TouchableOpacity>
-              )}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="time-outline" size={18} color="#7f5af0" />
+                <Text style={[styles.timeText, { color: textColor }]}>
+                  Reminder {idx + 1}: {formatTime(time)}
+                </Text>
+              </View>
             </View>
 
             <View style={styles.buttonRow}>
@@ -183,7 +184,8 @@ export default function ReminderScreen() {
                 onPress={() => setShowPickerIndex(idx)}
                 disabled={!enabled}
               >
-                <Text style={styles.buttonText}>Edit Time</Text>
+                <Ionicons name="create-outline" size={16} color="#fff" />
+                <Text style={styles.buttonText}> Edit</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -191,10 +193,10 @@ export default function ReminderScreen() {
                 onPress={() => removeTime(idx)}
                 disabled={!enabled}
               >
-                <Text style={styles.buttonText}>Delete</Text>
+                <Ionicons name="trash-outline" size={16} color="#fff" />
+                <Text style={styles.buttonText}> Delete</Text>
               </TouchableOpacity>
             </View>
-
 
             {showPickerIndex === idx && (
               <DateTimePicker
@@ -205,17 +207,28 @@ export default function ReminderScreen() {
                 onChange={(event, date) => handleTimeChange(event, date, idx)}
               />
             )}
-          </View>
+          </Animatable.View>
         ))}
 
+        {/* Add Time Button */}
         {enabled && (
-          <TouchableOpacity style={styles.addButton} onPress={addNewTime}>
-            <MaterialIcons name="add-circle-outline" size={24} color="#7f5af0" />
-            <Text style={styles.addText}>Add Another Time</Text>
-          </TouchableOpacity>
+          <Animatable.View animation="fadeInUp" delay={300}>
+            <TouchableOpacity style={styles.addButton} onPress={addNewTime}>
+              <MaterialIcons name="add-circle-outline" size={24} color="#7f5af0" />
+              <Text style={styles.addText}>Add Reminder</Text>
+            </TouchableOpacity>
+          </Animatable.View>
         )}
 
-      </View>
+        {/* Test Notification */}
+        <Animatable.View animation="fadeInUp" delay={400}>
+          <TouchableOpacity style={styles.testButton} onPress={sendTestNotification}>
+            <Ionicons name="notifications" size={22} color="#7f5af0" />
+            <Text style={styles.addText}>Send Test Notification</Text>
+          </TouchableOpacity>
+        </Animatable.View>
+      </ScrollView>
+
       <Toast />
     </View>
   );
@@ -223,7 +236,7 @@ export default function ReminderScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 20, gap: 20 },
+  content: { padding: 20, paddingBottom: 40 },
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -244,14 +257,14 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
+    marginTop: 10,
     marginBottom: -10,
   },
   card: {
     borderRadius: 18,
     padding: 16,
-    marginBottom: 12,
+    marginTop: 20,
     elevation: 4,
-    backgroundColor: '#f9f6ff',
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 3 },
@@ -259,15 +272,22 @@ const styles = StyleSheet.create({
   },
   timeHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   timeText: {
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 6,
   },
   addButton: {
+    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    paddingVertical: 10,
+  },
+  testButton: {
     marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -284,13 +304,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 10,
-    marginTop: 8,
+    marginTop: 12,
   },
   button: {
     flex: 1,
+    flexDirection: 'row',
     paddingVertical: 10,
+    paddingHorizontal: 8,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   editButton: {
     backgroundColor: '#7f5af0',

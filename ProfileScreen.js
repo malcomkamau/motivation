@@ -5,11 +5,13 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Animatable from 'react-native-animatable';
 
 import HeaderBar from './components/HeaderBar';
 import { useThemeContext } from './context/ThemeContext';
 import { getUserByEmail } from './userDb';
 import { getAvailableCategories, getQuotes } from './quotesDb';
+import { createBackup, restoreBackup } from './utils/BackupService';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -90,7 +92,7 @@ export default function ProfileScreen() {
       />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
-        <View style={styles.container}>
+        <Animatable.View animation="fadeInDown" style={styles.container}>
           <View style={styles.avatar}>
             {profile.avatar ? (
               <Image
@@ -104,16 +106,17 @@ export default function ProfileScreen() {
           <Text style={[styles.name, { color: themedColor }]}>{profile.name || 'Unnamed'}</Text>
           <Text style={[styles.email, { color: isDark ? '#aaa' : '#666' }]}>{profile.email}</Text>
           <Text style={[styles.bio, { color: isDark ? '#ccc' : '#444' }]}>{profile.bio || 'No bio yet.'}</Text>
-        </View>
+        </Animatable.View>
 
         {availableCategories.length > 0 && (
-          <View style={{ marginTop: 30 }}>
+          <Animatable.View animation="fadeInUp" delay={200}>
             <Text style={{
               fontSize: 18,
               fontWeight: 'bold',
               color: themedColor,
               marginBottom: 12,
               paddingHorizontal: 20,
+              marginTop: 20,
             }}>
               Quote Stats
             </Text>
@@ -137,6 +140,7 @@ export default function ProfileScreen() {
                       flexDirection: 'row',
                       alignItems: 'center',
                       maxHeight: 32,
+                      elevation: 2,
                     }}
                   >
                     <Ionicons
@@ -156,11 +160,11 @@ export default function ProfileScreen() {
                 );
               })}
             </ScrollView>
-          </View>
+          </Animatable.View>
         )}
 
         {/* Preferences Section */}
-        <View style={{ paddingHorizontal: 20, marginTop: 30 }}>
+        <Animatable.View animation="fadeInUp" delay={300} style={{ paddingHorizontal: 20, marginTop: 30 }}>
           <Text style={{ fontSize: 18, fontWeight: 'bold', color: themedColor, marginBottom: 12 }}>
             Your Preferences
           </Text>
@@ -169,6 +173,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               key={category}
               onPress={() => toggleCategory(category)}
+              activeOpacity={0.8}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -178,6 +183,10 @@ export default function ProfileScreen() {
                 backgroundColor: boxColor,
                 borderWidth: 1,
                 borderColor,
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 1,
               }}
             >
               <Ionicons
@@ -186,12 +195,59 @@ export default function ProfileScreen() {
                 color="#7f5af0"
                 style={{ marginRight: 10 }}
               />
-              <Text style={{ color: themedColor }}>
+              <Text style={{ color: themedColor, fontSize: 16 }}>
                 {capitalize(category)}
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </Animatable.View>
+
+        {/* Backup & Restore Section */}
+        <Animatable.View animation="fadeInUp" delay={400} style={{ paddingHorizontal: 20, marginTop: 30 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: themedColor, marginBottom: 12 }}>
+            Backup & Restore
+          </Text>
+
+          <TouchableOpacity
+            onPress={async () => {
+              const success = await createBackup();
+              alert(success ? 'Backup created successfully.' : 'Backup failed.');
+            }}
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: isDark ? '#292929' : '#e0eaff',
+              padding: 14,
+              borderRadius: 10,
+              marginBottom: 10,
+              borderWidth: 1,
+              borderColor: isDark ? '#444' : '#ccdfff',
+            }}
+          >
+            <Text style={{ color: isDark ? '#fff' : '#003366', fontSize: 16, fontWeight: '500', textAlign: 'center' }}>
+              Backup Data
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={async () => {
+              const success = await restoreBackup();
+              alert(success ? 'Data restored successfully. Please restart the app.' : 'No backup found.');
+            }}
+            activeOpacity={0.85}
+            style={{
+              backgroundColor: isDark ? '#292929' : '#fff2f2',
+              padding: 14,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: isDark ? '#444' : '#f5cccc',
+            }}
+          >
+            <Text style={{ color: isDark ? '#fff' : '#990000', fontSize: 16, fontWeight: '500', textAlign: 'center' }}>
+              Restore Data
+            </Text>
+          </TouchableOpacity>
+        </Animatable.View>
+
       </ScrollView>
     </View>
   );

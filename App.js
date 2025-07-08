@@ -13,6 +13,7 @@ import LoginScreen from './LoginScreen';
 import SignupScreen from './SignupScreen';
 import AuthLoadingScreen from './AuthLoadingScreen';
 import ReminderScreen from './ReminderScreen';
+import BackupRestoreScreen from './BackupRestoreScreen';
 
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -27,6 +28,7 @@ export default function App() {
             <Stack.Screen name="AuthLoading" component={AuthLoadingScreen} />    
             <Stack.Screen name="Login" component={LoginScreen} />      
             <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="BackupRestore" component={BackupRestoreScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
             <Stack.Screen name="Favorites" component={FavoritesScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />

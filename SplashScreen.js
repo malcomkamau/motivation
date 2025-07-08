@@ -1,16 +1,33 @@
-// SplashScreen.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Image, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import * as Animatable from 'react-native-animatable';
+import { useThemeContext } from './context/ThemeContext';
 
 export default function SplashScreen() {
+  const { currentTheme } = useThemeContext();
+  const isDark = currentTheme === 'dark';
+
   return (
-    <View style={styles.container}>
-      <Image
-        source={require('./assets/logo.png')} 
+    <View style={[styles.container, { backgroundColor: isDark ? '#121212' : '#f8f8f8' }]}>
+      <Animatable.Image
+        animation="bounceIn"
+        duration={1200}
+        source={require('./assets/logo.png')}
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.appName}>Daily Motivation</Text>
+
+      <Animatable.Text
+        animation="fadeInUp"
+        delay={500}
+        style={[
+          styles.appName,
+          { color: isDark ? '#fff' : '#222' },
+        ]}
+      >
+        Daily Motivation
+      </Animatable.Text>
+
       <ActivityIndicator size="large" color="#7f5af0" style={styles.spinner} />
     </View>
   );
@@ -19,20 +36,18 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
+    width: 160,
+    height: 160,
+    marginBottom: 10,
   },
   appName: {
-    fontSize: 22,
-    color: '#fff',
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 20,
   },
   spinner: {
     marginTop: 20,
