@@ -32,11 +32,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "bc90d357-dd0e-4db5-bc73-673f6be85576"
+        "projectId": "7a1c9203-849d-43fe-938d-033d6bc0fe85"
       }
     },
     "plugins": [
       "expo-sqlite"
-    ]
+    ],
+    "owner": "gakuomalcom"
   }
 }
