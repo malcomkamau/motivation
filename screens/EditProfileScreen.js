@@ -20,6 +20,25 @@ import HeaderBar from '../components/HeaderBar';
 import { useThemeContext } from '../context/ThemeContext';
 import { getUser, saveUser } from '../database/userDb';
 
+/**
+ * EditProfileScreen component allows users to view and edit their profile information.
+ * 
+ * Features:
+ * - Displays and allows editing of user's name, bio, and avatar.
+ * - Email is displayed but not editable.
+ * - Prompts user to confirm discarding unsaved changes when navigating away.
+ * - Allows picking a new avatar image from the device's gallery.
+ * - Saves updated profile information and provides feedback via Toast notifications.
+ * - Adapts styles based on the current theme (dark or light).
+ * 
+ * Hooks:
+ * - Uses React state and refs to manage form fields and original user data.
+ * - Uses navigation listeners to handle unsaved changes.
+ * - Uses context for theming.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered EditProfileScreen component.
+ */
 export default function EditProfileScreen() {
   const navigation = useNavigation();
   const { currentTheme } = useThemeContext();
@@ -38,6 +57,15 @@ export default function EditProfileScreen() {
   const bioRef = useRef();
 
   useEffect(() => {
+    /**
+     * Asynchronously loads the current user's profile data and updates the state variables.
+     * Retrieves the user object using `getUser()`, then sets the name, email, bio, and avatar state.
+     * Also updates the original user state and a ref for synchronization.
+     *
+     * @async
+     * @function loadProfile
+     * @returns {Promise<void>} Resolves when the profile data has been loaded and state updated.
+     */
     const loadProfile = async () => {
       const user = await getUser();
       if (user) {
@@ -53,6 +81,13 @@ export default function EditProfileScreen() {
   }, []);
 
   useEffect(() => {
+    /**
+     * Unsubscribes the navigation event listener for the 'beforeRemove' event.
+     * Call this function to remove the listener and prevent memory leaks when the component unmounts.
+     *
+     * @function
+     * @returns {void}
+     */
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
       const original = originalUserRef.current;
 
@@ -85,6 +120,18 @@ export default function EditProfileScreen() {
     return unsubscribe;
   }, [navigation, name, email, bio, avatar]);
 
+  /**
+   * Prompts the user to pick an image from their device's media library.
+   * Requests media library permissions if not already granted.
+   * Allows the user to select and optionally edit an image (aspect ratio 1:1, quality 0.5).
+   * Only accepts images with .jpg, .jpeg, or .png extensions.
+   * Sets the selected image URI as the avatar if valid.
+   * Displays alerts if permissions are denied, an invalid image is selected, or an error occurs.
+   *
+   * @async
+   * @function pickImage
+   * @returns {Promise<void>} Resolves when the image picking process is complete.
+   */
   const pickImage = async () => {
     try {
       const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -92,6 +139,16 @@ export default function EditProfileScreen() {
         return Alert.alert('Permission required', 'Camera roll permission is needed.');
       }
 
+      /**
+       * Result object returned from ImagePicker.launchImageLibraryAsync.
+       * @typedef {Object} ImagePickerResult
+       * @property {boolean} cancelled - Indicates if the image picking was cancelled by the user.
+       * @property {string} [uri] - The URI of the selected image (if not cancelled).
+       * @property {Object} [assets] - Array of selected assets (if available, depending on Expo SDK version).
+       * @property {number} [width] - The width of the selected image (if not cancelled).
+       * @property {number} [height] - The height of the selected image (if not cancelled).
+       * @property {string} [type] - The type of the selected media (e.g., 'image').
+       */
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -112,6 +169,16 @@ export default function EditProfileScreen() {
     }
   };
 
+  /**
+   * Handles saving the user's profile changes.
+   * Validates that name and email are provided, updates the user profile,
+   * shows success or error toasts, updates local state and ref, and navigates back on success.
+   * Displays an error toast if saving fails.
+   *
+   * @async
+   * @function handleSave
+   * @returns {Promise<void>} Resolves when the save operation is complete.
+   */
   const handleSave = async () => {
     if (!name.trim() || !email.trim()) {
       return Toast.show({
@@ -139,8 +206,8 @@ export default function EditProfileScreen() {
         text2: 'Changes saved successfully.',
       });
 
-      setOriginalUser(updatedUser);          // ✅ update state
-      originalUserRef.current = updatedUser; // ✅ update ref
+      setOriginalUser(updatedUser);          // update state
+      originalUserRef.current = updatedUser; // update ref
 
       navigation.goBack();
     } catch (err) {

@@ -20,6 +20,27 @@ import { ThemeProvider } from './context/ThemeContext';
 
 const Stack = createNativeStackNavigator();
 
+/**
+ * The main entry point of the application.
+ * 
+ * Renders the app's navigation structure wrapped with gesture handling and theming providers.
+ * 
+ * Navigation includes:
+ * - AuthLoadingScreen: Initial loading/authentication check.
+ * - LoginScreen: User login.
+ * - HomeScreen: Main app content.
+ * - BackupRestoreScreen: Backup and restore functionality.
+ * - SignupScreen: User registration.
+ * - FavoritesScreen: User's favorite items.
+ * - ProfileScreen: User profile view.
+ * - EditProfileScreen: Edit user profile.
+ * - SettingsScreen: App settings.
+ * - ReminderScreen: Reminders and notifications.
+ * 
+ * All screens are managed by a stack navigator with headers hidden.
+ * 
+ * @returns {JSX.Element} The root component of the app.
+ */
 export default function App() {
   return (
     // <NavigationContainer>

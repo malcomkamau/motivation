@@ -10,6 +10,15 @@ import HeaderBar from '../components/HeaderBar';
 import { useThemeContext } from '../context/ThemeContext';
 import { getUserByEmail } from '../database/userDb';
 
+/**
+ * Asynchronously clears all data from AsyncStorage.
+ * Displays an alert upon successful completion.
+ * Logs an error to the console if clearing fails.
+ *
+ * @async
+ * @function clearStorage
+ * @returns {Promise<void>} Resolves when storage is cleared or logs an error if it fails.
+ */
 const clearStorage = async () => {
   try {
     await AsyncStorage.clear();
@@ -19,6 +28,21 @@ const clearStorage = async () => {
   }
 };
 
+/**
+ * LoginScreen component provides a user interface for logging into the application.
+ * 
+ * Features:
+ * - Accepts user email and password input.
+ * - Validates input fields and displays alerts for missing or incorrect credentials.
+ * - Authenticates user by checking credentials against stored user data.
+ * - Stores the logged-in user's email in AsyncStorage upon successful login.
+ * - Navigates to the Home screen after successful authentication.
+ * - Provides navigation to the Signup screen for new users.
+ * - Adapts UI based on the current theme (dark or light).
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered login screen component.
+ */
 export default function LoginScreen() {
   const navigation = useNavigation();
   const { currentTheme } = useThemeContext();
@@ -27,6 +51,21 @@ export default function LoginScreen() {
   const [emailRaw, setEmailRaw] = useState('');
   const [password, setPassword] = useState('');
 
+  /**
+   * Handles the login process for a user.
+   * 
+   * - Trims and normalizes the email input.
+   * - Validates that both email and password fields are filled.
+   * - Attempts to retrieve the user by email.
+   * - Checks if the user exists and if the password matches.
+   * - Stores the current user's email in AsyncStorage upon successful login.
+   * - Navigates to the 'Home' screen and resets the navigation stack.
+   * - Displays appropriate alerts for missing fields, login failures, or errors.
+   * 
+   * @async
+   * @function
+   * @returns {Promise<void>}
+   */
   const handleLogin = async () => {
     const email = emailRaw.trim().toLowerCase();
 

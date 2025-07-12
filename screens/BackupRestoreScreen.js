@@ -8,10 +8,29 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { restoreBackup } from '../utils/BackupService';
 
+/**
+ * BackupRestoreScreen is a React component that displays a UI for restoring a user's backup data.
+ * 
+ * - Shows an option to restore a previously found backup or skip the process.
+ * - Handles loading state during the restore operation.
+ * - Navigates to 'AuthLoading' on successful restore, or 'Signup' if skipped.
+ * - Alerts the user if the restore operation fails.
+ * 
+ * @function
+ * @returns {JSX.Element} The rendered backup restore screen component.
+ */
 export default function BackupRestoreScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = React.useState(false);
 
+  /**
+   * Handles the restore backup process.
+   * Sets loading state, attempts to restore backup, and navigates or alerts based on the result.
+   * 
+   * @async
+   * @function handleRestore
+   * @returns {Promise<void>}
+   */
   const handleRestore = async () => {
     setLoading(true);
     const success = await restoreBackup();
@@ -24,6 +43,10 @@ export default function BackupRestoreScreen() {
     }
   };
 
+  /**
+   * Navigates to the 'Signup' screen by resetting the navigation stack.
+   * This effectively skips the current flow and starts fresh at the 'Signup' screen.
+   */
   const handleSkip = () => {
     navigation.reset({ index: 0, routes: [{ name: 'Signup' }] });
   };
@@ -53,6 +76,17 @@ export default function BackupRestoreScreen() {
   );
 }
 
+/**
+ * Styles for the BackupRestoreScreen component.
+ *
+ * @property {object} container - Main container style with centered content, padding, and background color.
+ * @property {object} title - Style for the main title text, including font size, weight, color, and margin.
+ * @property {object} subtitle - Style for the subtitle text, with font size, color, alignment, and margin.
+ * @property {object} restoreButton - Style for the restore button, including background color, padding, border radius, and alignment.
+ * @property {object} buttonText - Style for the text inside buttons, with color and font size.
+ * @property {object} skipButton - Style for the skip button, with padding.
+ * @property {object} skipText - Style for the skip button text, including font size, color, and underline decoration.
+ */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

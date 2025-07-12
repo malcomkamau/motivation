@@ -1,6 +1,21 @@
 import uuid from 'react-native-uuid';
 import { getQuotes, saveQuotes } from '../database/quotesDb';
 
+/**
+ * Fetches motivational quotes from the ZenQuotes API, formats them, assigns unique IDs,
+ * categorizes each quote, and merges them into local storage ensuring uniqueness.
+ *
+ * @async
+ * @function fetchQuotesFromAPI
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of newly added quote objects.
+ * Each quote object contains:
+ *   - {string} id: A unique identifier for the quote.
+ *   - {string} text: The text of the quote.
+ *   - {string} author: The author of the quote, or 'Unknown' if not provided.
+ *   - {string} category: The category assigned to the quote.
+ *
+ * @throws {Error} If the API request fails or the response is not OK.
+ */
 export const fetchQuotesFromAPI = async () => {
   const API_URL = 'https://zenquotes.io/api/quotes';
 
@@ -32,6 +47,16 @@ export const fetchQuotesFromAPI = async () => {
 };
 
 // Merge without duplicates (by quote text)
+/**
+ * Merges new quotes with the existing quotes, ensuring no duplicates by quote text.
+ * Only quotes with unique text (after trimming) are added to the existing collection.
+ * The updated list is then saved.
+ *
+ * @async
+ * @function
+ * @param {Array<{ text: string, [key: string]: any }>} newQuotes - Array of new quote objects to merge.
+ * @returns {Promise<void>} Resolves when the quotes have been merged and saved.
+ */
 const mergeQuotes = async (newQuotes) => {
   const existing = await getQuotes();
 
@@ -43,6 +68,12 @@ const mergeQuotes = async (newQuotes) => {
 };
 
 // Categorize quote text
+/**
+ * Categorizes a quote based on keywords found in the provided text.
+ *
+ * @param {string} [text=''] - The quote text to categorize.
+ * @returns {string} The category of the quote: 'success', 'love', 'life', 'mindset', 'dreams', or 'inspiration'.
+ */
 const categorizeQuote = (text = '') => {
   const t = text.toLowerCase();
   if (t.includes('success') || t.includes('goal')) return 'success';

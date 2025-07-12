@@ -13,6 +13,31 @@ import { getUserByEmail } from '../database/userDb';
 import { getAvailableCategories, getQuotes } from '../database/quotesDb';
 import { createBackup, restoreBackup } from '../utils/BackupService';
 
+/**
+ * ProfileScreen component displays the user's profile information, preferences, quote statistics,
+ * and provides options for backing up and restoring user data.
+ *
+ * Features:
+ * - Shows user's avatar, name, email, and bio.
+ * - Displays quote statistics per category.
+ * - Allows users to select and update their preferred quote categories.
+ * - Provides backup and restore functionality for user data.
+ * - Adapts UI based on the current theme (dark/light).
+ *
+ * Hooks:
+ * - Loads user data and preferences when the screen is focused.
+ * - Updates preferences in AsyncStorage when changed.
+ *
+ * Dependencies:
+ * - React Navigation for navigation and focus detection.
+ * - AsyncStorage for persistent storage.
+ * - Custom hooks: useThemeContext.
+ * - Utility functions: getUserByEmail, getAvailableCategories, getQuotes, createBackup, restoreBackup.
+ * - UI libraries: react-native, react-native-animatable, Ionicons.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered profile screen.
+ */
 export default function ProfileScreen() {
   const navigation = useNavigation();
   const isFocused = useIsFocused();

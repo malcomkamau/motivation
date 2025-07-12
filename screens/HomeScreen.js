@@ -16,6 +16,35 @@ import {
 } from '../database/quotesDb';
 import { getUserByEmail } from '../database/userDb';
 
+/**
+ * HomeScreen component displays a list of motivational quotes, allows users to favorite and share quotes,
+ * and provides access to profile, favorites, and settings. It supports theme switching, pull-to-refresh,
+ * and user-specific preferences and favorites.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered HomeScreen component.
+ *
+ * @example
+ * // Usage in a navigator
+ * <Stack.Screen name="Home" component={HomeScreen} />
+ *
+ * @description
+ * - Fetches and displays a shuffled list of motivational quotes based on user preferences.
+ * - Allows users to favorite/unfavorite quotes and share them via the device's share dialog.
+ * - Provides a profile dropdown menu for navigation to Profile, Favorites, Settings, and Logout.
+ * - Supports dark and light themes.
+ * - Uses FlatList for vertical paging of quotes with animated transitions.
+ * - Handles user authentication state and avatar display.
+ *
+ * @dependencies
+ * - React Native components (View, Text, FlatList, Modal, etc.)
+ * - React Navigation hooks (useNavigation, useIsFocused)
+ * - Custom hooks (useThemeContext)
+ * - AsyncStorage for persistent storage
+ * - Utility functions: getUserByEmail, getQuotes, getFavorites, addFavorite, removeFavorite
+ * - Toast for notifications
+ * - Animated for fade-in transitions
+ */
 export default function HomeScreen() {
     const { height } = Dimensions.get('window');
     const navigation = useNavigation();
@@ -34,6 +63,14 @@ export default function HomeScreen() {
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     const viewabilityConfig = { itemVisiblePercentThreshold: 50 };
+    /**
+     * Callback function triggered when the set of viewable items changes in a list.
+     * Updates the current quote to the first viewable item's data and animates its appearance.
+     *
+     * @param {Object} params - The parameters object.
+     * @param {Array} params.viewableItems - Array of currently viewable items in the list.
+     * @returns {void}
+     */
     const onViewableItemsChanged = useRef(({ viewableItems }) => {
         if (viewableItems.length > 0) {
             setCurrentQuote(viewableItems[0].item);
@@ -46,14 +83,42 @@ export default function HomeScreen() {
         }
     }).current;
 
+    /**
+     * Reference to the FlatList component.
+     * Used to access FlatList methods such as scrollToIndex or scrollToOffset.
+     * @type {React.MutableRefObject<FlatList|null>}
+     */
     const flatListRef = useRef(null);
 
+    /**
+     * Returns a new array with the elements of the input array shuffled in random order.
+     *
+     * @param {Array} arr - The array to shuffle.
+     * @returns {Array} A new array with the elements shuffled.
+     */
     const shuffleArray = (arr) =>
         arr
             .map(value => ({ value, sort: Math.random() }))
             .sort((a, b) => a.sort - b.sort)
             .map(({ value }) => value);
 
+    /**
+     * Asynchronously loads user data, preferences, quotes, and favorites.
+     * 
+     * - Retrieves the current user's email from AsyncStorage and updates state.
+     * - Fetches user details and sets the avatar if available.
+     * - Loads all quotes and the user's favorite quotes.
+     * - Loads and parses user preferences from AsyncStorage.
+     * - Filters quotes based on user preferences (if any).
+     * - Shuffles the filtered quotes and limits to 100 items.
+     * - Alerts the user if no quotes are found for the current preferences.
+     * - Updates state with favorites, quotes, and the current quote.
+     * - Handles and alerts on any errors during the loading process.
+     * 
+     * @async
+     * @function loadData
+     * @returns {Promise<void>}
+     */
     const loadData = async () => {
         try {
             const email = await AsyncStorage.getItem('currentUser');
@@ -65,6 +130,13 @@ export default function HomeScreen() {
             const storedQuotes = await getQuotes();
             const storedFavorites = email ? await getFavorites(email) : [];
 
+            /**
+             * A unique key for storing user preferences in local storage, 
+             * constructed using the user's email address.
+             * @type {string}
+             * @example
+             * // For email 'user@example.com', prefKey will be 'preferences_user@example.com'
+             */
             const prefKey = `preferences_${email}`;
             const storedPrefs = await AsyncStorage.getItem(prefKey);
             const preferences = storedPrefs
@@ -97,6 +169,15 @@ export default function HomeScreen() {
         }
     };
 
+    /**
+     * Handles the pull-to-refresh action.
+     * Sets the refreshing state to true, reloads data asynchronously,
+     * and then sets the refreshing state back to false.
+     *
+     * @async
+     * @function onRefresh
+     * @returns {Promise<void>} Resolves when the refresh operation is complete.
+     */
     const onRefresh = async () => {
         setRefreshing(true);
         await loadData();
@@ -110,6 +191,15 @@ export default function HomeScreen() {
         }
     }, [isFocused]);
 
+    /**
+     * Shares the current quote using the device's native share functionality.
+     * If a quote is available, formats it with the author and a custom message.
+     * Closes the modal after sharing. Displays an alert if an error occurs.
+     *
+     * @async
+     * @function handleShare
+     * @returns {Promise<void>} Resolves when the share action is complete.
+     */
     const handleShare = async () => {
         try {
             const message = currentQuote
@@ -122,6 +212,15 @@ export default function HomeScreen() {
         }
     };
 
+    /**
+     * Toggles the favorite status of the current quote for the logged-in user.
+     * If the quote is already a favorite, it removes it; otherwise, it adds it to favorites.
+     * Updates the favorites list and displays a toast notification indicating the action taken.
+     *
+     * @async
+     * @function
+     * @returns {Promise<void>} Resolves when the favorite status has been toggled and UI updated.
+     */
     const toggleFavorite = async () => {
         if (!userEmail || !currentQuote) return;
 
@@ -144,6 +243,13 @@ export default function HomeScreen() {
     const themedColor = isDark ? '#fff' : '#000';
     const bgColor = isDark ? '#121212' : '#f6f0fc';
 
+    /**
+     * Renders a single item for a FlatList or similar component.
+     *
+     * @param {Object} params - The parameters object.
+     * @param {Object} params.item - The item to render, containing quote text and author.
+     * @returns {React.ReactElement} The rendered Animated.View component displaying the quote and author.
+     */
     const renderItem = ({ item }) => (
         <Animated.View style={{
             opacity: fadeAnim,
