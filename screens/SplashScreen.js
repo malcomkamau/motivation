@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Image, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { useThemeContext } from './context/ThemeContext';
+import { useThemeContext } from '../context/ThemeContext';
 
 export default function SplashScreen() {
   const { currentTheme } = useThemeContext();

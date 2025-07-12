@@ -1,5 +1,5 @@
 import uuid from 'react-native-uuid';
-import { getQuotes, saveQuotes } from './quotesDb';
+import { getQuotes, saveQuotes } from '../database/quotesDb';
 
 export const fetchQuotesFromAPI = async () => {
   const API_URL = 'https://zenquotes.io/api/quotes';

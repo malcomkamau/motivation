@@ -14,8 +14,8 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
-import { useThemeContext } from './context/ThemeContext';
-import { getFavorites, removeFavorite } from './quotesDb';
+import { useThemeContext } from '../context/ThemeContext';
+import { getFavorites, removeFavorite } from '../database/quotesDb';
 
 export default function FavoritesScreen() {
   const navigation = useNavigation();

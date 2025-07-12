@@ -1,7 +1,6 @@
-// ReminderScreen.js
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, Alert, StyleSheet, TouchableOpacity, Platform, ScrollView
+  View, Text, Alert, StyleSheet, TouchableOpacity, ScrollView, Platform
 } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import * as Notifications from 'expo-notifications';
@@ -11,14 +10,14 @@ import Toast from 'react-native-toast-message';
 import SwitchToggle from 'react-native-switch-toggle';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 
-import HeaderBar from './components/HeaderBar';
-import { useThemeContext } from './context/ThemeContext';
-import { getQuotes } from './quotesDb';
-import { registerForPushNotificationsAsync, sendTestNotification } from './NotificationHelper';
+import HeaderBar from '../components/HeaderBar';
+import { useThemeContext } from '../context/ThemeContext';
+import { getQuotes } from '../database/quotesDb';
 
 export default function ReminderScreen() {
   const [enabled, setEnabled] = useState(false);
-  const [times, setTimes] = useState([new Date()]);
+  const [times, setTimes] = useState([]);
+  const [notificationIds, setNotificationIds] = useState([]);
   const [showPickerIndex, setShowPickerIndex] = useState(null);
 
   const { currentTheme } = useThemeContext();
@@ -27,41 +26,77 @@ export default function ReminderScreen() {
   const textColor = isDark ? '#fff' : '#000';
 
   useEffect(() => {
-    registerForPushNotificationsAsync();
-    loadReminderSettings();
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+
+    requestPermissions();
+    loadSettings();
   }, []);
 
-  const loadReminderSettings = async () => {
-    const saved = await AsyncStorage.getItem('reminderTimes');
-    const enabledFlag = await AsyncStorage.getItem('reminderEnabled');
-    if (saved) setTimes(JSON.parse(saved).map(t => new Date(t)));
-    if (enabledFlag === 'true') setEnabled(true);
+  const requestPermissions = async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      if (newStatus !== 'granted') {
+        Alert.alert("Permission Denied", "Please enable notifications in settings.");
+      }
+    }
   };
 
-  const saveSettings = async (newTimes) => {
-    await AsyncStorage.setItem('reminderTimes', JSON.stringify(newTimes));
-    await AsyncStorage.setItem('reminderEnabled', enabled.toString());
+  const loadSettings = async () => {
+    const saved = await AsyncStorage.getItem('reminderData');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setTimes(parsed.times.map(t => new Date(t)) || []);
+      setEnabled(parsed.enabled || false);
+      setNotificationIds(parsed.notifIds || []);
+    } else {
+      setTimes([]);
+      setNotificationIds([]);
+    }
+  };
+
+  const saveSettings = async (updatedTimes, updatedNotifIds = notificationIds) => {
+    await AsyncStorage.setItem(
+      'reminderData',
+      JSON.stringify({
+        times: updatedTimes,
+        enabled,
+        notifIds: updatedNotifIds
+      })
+    );
   };
 
   const toggleReminder = async () => {
     const newState = !enabled;
     setEnabled(newState);
-    await AsyncStorage.setItem('reminderEnabled', newState.toString());
+    await AsyncStorage.setItem('reminderData', JSON.stringify({ times, enabled: newState, notifIds: notificationIds }));
 
     if (newState) {
-      scheduleAllNotifications(times);
+      await scheduleAllNotifications(times);
     } else {
       await cancelAllNotifications();
       Toast.show({ type: 'info', text1: 'Reminders disabled' });
     }
   };
 
+  const cancelAllNotifications = async () => {
+    for (let id of notificationIds) {
+      await Notifications.cancelScheduledNotificationAsync(id);
+    }
+    setNotificationIds([]);
+    await saveSettings(times, []);
+  };
+
   const scheduleAllNotifications = async (timeArray) => {
     await cancelAllNotifications();
 
     const email = await AsyncStorage.getItem('currentUser');
-    if (!email) return;
-
     const prefKey = `preferences_${email}`;
     const storedPrefs = await AsyncStorage.getItem(prefKey);
     const preferences = storedPrefs ? JSON.parse(storedPrefs).map(p => p.toLowerCase()) : [];
@@ -70,67 +105,82 @@ export default function ReminderScreen() {
     const filteredQuotes =
       preferences.length === 0
         ? allQuotes
-        : allQuotes.filter(q => preferences.includes(q.category));
+        : allQuotes.filter(q =>
+          preferences.includes(q.category?.toLowerCase?.().trim())
+        );
+
 
     if (filteredQuotes.length === 0) {
       Alert.alert("No quotes found", "No quotes available for your selected categories.");
       return;
     }
 
+    const notifIds = [];
     for (let date of timeArray) {
-      const randomQuote = filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)];
+      const quote = filteredQuotes[Math.floor(Math.random() * filteredQuotes.length)];
 
-      const trigger = {
-        hour: date.getHours(),
-        minute: date.getMinutes(),
-        second: 0,
-        repeats: true,
-      };
-
-      console.log('Scheduling at', trigger);
-      await Notifications.scheduleNotificationAsync({
+      const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: '🌟 Daily Motivation',
-          body: `${randomQuote.text} — ${randomQuote.author || 'Unknown'}`,
+          title: 'Daily Motivation',
+          body: `${quote.text} — ${quote.author || 'Unknown'}`,
         },
-        trigger,
+        trigger: {
+          hour: date.getHours(),
+          minute: date.getMinutes(),
+          repeats: true,
+        },
       });
+      notifIds.push(id);
     }
 
+    setNotificationIds(notifIds);
+    await saveSettings(timeArray, notifIds);
     Toast.show({ type: 'success', text1: 'Reminders scheduled!' });
-  };
-
-  const cancelAllNotifications = async () => {
-    await Notifications.cancelAllScheduledNotificationsAsync();
   };
 
   const handleTimeChange = (event, selectedDate, index) => {
     if (!selectedDate) return;
 
-    const newTimes = [...times];
-    newTimes[index] = selectedDate;
-    setTimes(newTimes);
-    saveSettings(newTimes);
+    const updatedTimes = [...times];
+    updatedTimes[index] = selectedDate;
+    setTimes(updatedTimes);
+    saveSettings(updatedTimes);
 
-    if (enabled) scheduleAllNotifications(newTimes);
+    if (enabled) scheduleAllNotifications(updatedTimes);
     setShowPickerIndex(null);
   };
 
-  const addNewTime = () => {
-    const newTime = new Date();
-    const updated = [...times, newTime];
+  const addNewTime = async () => {
+    const updated = [...times, new Date()];
     setTimes(updated);
-    saveSettings(updated);
+    await saveSettings(updated);
+    if (enabled) await scheduleAllNotifications(updated);
     Toast.show({ type: 'success', text1: 'New reminder time added' });
   };
 
-  const removeTime = (index) => {
-    const updated = times.filter((_, i) => i !== index);
-    setTimes(updated);
-    saveSettings(updated);
-    Toast.show({ type: 'info', text1: 'Reminder removed' });
+  const removeTime = async (index) => {
+    if (notificationIds[index]) {
+      await Notifications.cancelScheduledNotificationAsync(notificationIds[index]);
+    }
 
-    if (enabled) scheduleAllNotifications(updated);
+    const updatedTimes = times.filter((_, i) => i !== index);
+    const updatedNotifIds = notificationIds.filter((_, i) => i !== index);
+    setTimes(updatedTimes);
+    setNotificationIds(updatedNotifIds);
+    await saveSettings(updatedTimes, updatedNotifIds);
+
+    if (enabled) await scheduleAllNotifications(updatedTimes);
+    Toast.show({ type: 'info', text1: 'Reminder removed' });
+  };
+
+  const sendTestNotification = async () => {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Test Motivation Reminder',
+        body: 'Here’s your daily dose of motivation!',
+      },
+      trigger: null,
+    });
   };
 
   const formatTime = (date) => {
@@ -161,7 +211,6 @@ export default function ReminderScreen() {
           </Text>
         )}
 
-        {/* Time Cards */}
         {times.map((time, idx) => (
           <Animatable.View
             key={idx}
@@ -210,7 +259,6 @@ export default function ReminderScreen() {
           </Animatable.View>
         ))}
 
-        {/* Add Time Button */}
         {enabled && (
           <Animatable.View animation="fadeInUp" delay={300}>
             <TouchableOpacity style={styles.addButton} onPress={addNewTime}>
@@ -220,20 +268,20 @@ export default function ReminderScreen() {
           </Animatable.View>
         )}
 
-        {/* Test Notification */}
         <Animatable.View animation="fadeInUp" delay={400}>
           <TouchableOpacity style={styles.testButton} onPress={sendTestNotification}>
             <Ionicons name="notifications" size={22} color="#7f5af0" />
             <Text style={styles.addText}>Send Test Notification</Text>
           </TouchableOpacity>
         </Animatable.View>
-      </ScrollView>
 
+      </ScrollView>
       <Toast />
     </View>
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 20, paddingBottom: 40 },

@@ -7,8 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 
-import HeaderBar from './components/HeaderBar';
-import { useThemeContext } from './context/ThemeContext';
+import HeaderBar from '../components/HeaderBar';
+import { useThemeContext } from '../context/ThemeContext';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();

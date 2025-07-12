@@ -6,7 +6,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { restoreBackup } from './utils/BackupService';
+import { restoreBackup } from '../utils/BackupService';
 
 export default function BackupRestoreScreen() {
   const navigation = useNavigation();

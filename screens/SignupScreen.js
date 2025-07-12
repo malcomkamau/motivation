@@ -6,10 +6,10 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Animatable from 'react-native-animatable';
 
-import HeaderBar from './components/HeaderBar';
-import { insertUser, getUserByEmail } from './userDb';
-import { useThemeContext } from './context/ThemeContext';
-import { ensureQuotesFetched } from './utils/ensureQuotesFetched';
+import HeaderBar from '../components/HeaderBar';
+import { insertUser, getUserByEmail } from '../database/userDb';
+import { useThemeContext } from '../context/ThemeContext';
+import { ensureQuotesFetched } from '../utils/ensureQuotesFetched';
 
 export default function SignupScreen() {
   const navigation = useNavigation();

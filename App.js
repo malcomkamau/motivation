@@ -4,16 +4,17 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import HomeScreen from './HomeScreen';
-import FavoritesScreen from './FavoritesScreen';
-import ProfileScreen from './ProfileScreen';
-import EditProfileScreen from './EditProfileScreen';
-import SettingsScreen from './SettingsScreen';
-import LoginScreen from './LoginScreen';
-import SignupScreen from './SignupScreen';
-import AuthLoadingScreen from './AuthLoadingScreen';
-import ReminderScreen from './ReminderScreen';
-import BackupRestoreScreen from './BackupRestoreScreen';
+import HomeScreen from './screens/HomeScreen';
+import FavoritesScreen from './screens/FavoritesScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import EditProfileScreen from './screens/EditProfileScreen';
+import SettingsScreen from './screens/SettingsScreen';
+import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
+import AuthLoadingScreen from './screens/AuthLoadingScreen';
+import ReminderScreen from './screens/ReminderScreen';
+import BackupRestoreScreen from './screens/BackupRestoreScreen';
+import TestScreen from './screens/TestScreen';
 
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -21,6 +22,11 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
+    // <NavigationContainer>
+    //   <Stack.Navigator>
+    //   <Stack.Screen name="Test" component={TestScreen} />
+    // </Stack.Navigator>
+    // </NavigationContainer>
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <NavigationContainer>

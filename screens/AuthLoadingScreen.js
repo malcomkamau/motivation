@@ -14,10 +14,10 @@ import NetInfo from '@react-native-community/netinfo';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Animatable from 'react-native-animatable';
 
-import { fetchQuotesFromAPI } from './fetchQuotesFromAPI';
-import { getQuotes } from './quotesDb';
-import { useThemeContext } from './context/ThemeContext';
-import { backupExists, restoreBackup } from './utils/BackupService';
+import { fetchQuotesFromAPI } from '../utils/fetchQuotesFromAPI';
+import { getQuotes } from '../database/quotesDb';
+import { useThemeContext } from '../context/ThemeContext';
+import { backupExists, restoreBackup } from '../utils/BackupService';
 
 export default function AuthLoadingScreen() {
   const navigation = useNavigation();
@@ -43,7 +43,7 @@ export default function AuthLoadingScreen() {
       const netState = await NetInfo.fetch();
       const isConnected = netState.isConnected;
 
-      if (isConnected && quoteCount < 100) {
+      if (isConnected && quoteCount < 500) {
         await fetchQuotesFromAPI(); // Auto-saves
       }
 
@@ -124,7 +124,7 @@ export default function AuthLoadingScreen() {
         duration={800}
         style={[styles.title, { color: fg }]}
       >
-        🌟 Daily Motivation
+        Daily Motivation
       </Animatable.Text>
 
       <Animatable.Text

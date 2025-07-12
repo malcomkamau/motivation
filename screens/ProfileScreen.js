@@ -7,11 +7,11 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Animatable from 'react-native-animatable';
 
-import HeaderBar from './components/HeaderBar';
-import { useThemeContext } from './context/ThemeContext';
-import { getUserByEmail } from './userDb';
-import { getAvailableCategories, getQuotes } from './quotesDb';
-import { createBackup, restoreBackup } from './utils/BackupService';
+import HeaderBar from '../components/HeaderBar';
+import { useThemeContext } from '../context/ThemeContext';
+import { getUserByEmail } from '../database/userDb';
+import { getAvailableCategories, getQuotes } from '../database/quotesDb';
+import { createBackup, restoreBackup } from '../utils/BackupService';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();

@@ -9,13 +9,12 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
-import { useThemeContext } from './context/ThemeContext';
+import { useThemeContext } from '../context/ThemeContext';
 import {
     getFavorites, addFavorite, removeFavorite,
     getQuotes
-} from './quotesDb';
-import { getUserByEmail } from './userDb';
-import { registerForPushNotificationsAsync } from './NotificationHelper';
+} from '../database/quotesDb';
+import { getUserByEmail } from '../database/userDb';
 
 export default function HomeScreen() {
     const { height } = Dimensions.get('window');
@@ -107,14 +106,14 @@ export default function HomeScreen() {
     useEffect(() => {
         if (isFocused) {
             loadData();
-            registerForPushNotificationsAsync();
+            // registerForPushNotificationsAsync();
         }
     }, [isFocused]);
 
     const handleShare = async () => {
         try {
             const message = currentQuote
-                ? `"${currentQuote.text}"\n— ${currentQuote.author || 'Unknown'}\n\nShared from Motivation App 🌛`
+                ? `"${currentQuote.text}"\n— ${currentQuote.author || 'Unknown'}\n\nShared from Motivation App`
                 : '';
             await Share.share({ message });
             setModalVisible(false);

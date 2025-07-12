@@ -6,9 +6,9 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Animatable from 'react-native-animatable';
 
-import HeaderBar from './components/HeaderBar';
-import { useThemeContext } from './context/ThemeContext';
-import { getUserByEmail } from './userDb';
+import HeaderBar from '../components/HeaderBar';
+import { useThemeContext } from '../context/ThemeContext';
+import { getUserByEmail } from '../database/userDb';
 
 const clearStorage = async () => {
   try {

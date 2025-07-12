@@ -16,9 +16,9 @@ import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
-import HeaderBar from './components/HeaderBar';
-import { useThemeContext } from './context/ThemeContext';
-import { getUser, saveUser } from './userDb';
+import HeaderBar from '../components/HeaderBar';
+import { useThemeContext } from '../context/ThemeContext';
+import { getUser, saveUser } from '../database/userDb';
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();

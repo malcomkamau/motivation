@@ -1,6 +1,6 @@
 // utils/ensureQuotesFetched.js
-import { fetchQuotesFromAPI } from '../fetchQuotesFromAPI';
-import { getQuotes } from '../quotesDb';
+import { fetchQuotesFromAPI } from './fetchQuotesFromAPI';
+import { getQuotes } from '../database/quotesDb';
 import NetInfo from '@react-native-community/netinfo';
 
 export async function ensureQuotesFetched() {
