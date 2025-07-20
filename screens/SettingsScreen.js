@@ -65,13 +65,14 @@ export default function SettingsScreen() {
           >
             <Text style={{ color: textColor }}>View Profile</Text>
           </Pressable>
-
+          {/* 
           <Pressable
             onPress={() => navigation.navigate('Reminder')}
             style={[styles.item, { backgroundColor: cardBg }]}
           >
             <Text style={{ color: textColor }}>Daily Reminder</Text>
           </Pressable>
+          */}
         </Animatable.View>
 
         <Animatable.View animation="fadeInUp" delay={350} style={styles.buttonRow}>

@@ -61,7 +61,7 @@ export default function App() {
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen name="Reminder" component={ReminderScreen} /> 
+            {/*<Stack.Screen name="Reminder" component={ReminderScreen} />*/} 
           </Stack.Navigator>
         </NavigationContainer>
       </ThemeProvider>

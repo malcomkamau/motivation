@@ -31,7 +31,7 @@ export const fetchQuotesFromAPI = async () => {
       text: q.q.trim(),
       author: q.a || 'Unknown',
       category: categorizeQuote(q.q),
-    }));
+    })); 
 
     // Merge into local storage
     await mergeQuotes(newQuotes);
@@ -76,10 +76,46 @@ const mergeQuotes = async (newQuotes) => {
  */
 const categorizeQuote = (text = '') => {
   const t = text.toLowerCase();
-  if (t.includes('success') || t.includes('goal')) return 'success';
-  if (t.includes('love')) return 'love';
-  if (t.includes('life') || t.includes('journey')) return 'life';
-  if (t.includes('mind') || t.includes('believe')) return 'mindset';
-  if (t.includes('dream') || t.includes('passion')) return 'dreams';
-  return 'inspiration';
+
+  const categories = [
+    { category: 'success', keywords: ['success', 'goal', 'achievement', 'accomplish', 'results', 'win'] },
+    { category: 'love', keywords: ['love', 'heart', 'compassion', 'affection', 'romance', 'care'] },
+    { category: 'life', keywords: ['life', 'journey', 'existence', 'living', 'day', 'experience'] },
+    { category: 'mindset', keywords: ['mind', 'believe', 'attitude', 'focus', 'thought', 'discipline'] },
+    { category: 'dreams', keywords: ['dream', 'passion', 'vision', 'ambition', 'desire', 'imagine'] },
+    { category: 'perseverance', keywords: ['never give up', 'keep going', 'persistence', 'grit', 'struggle', 'overcome'] },
+    { category: 'happiness', keywords: ['happy', 'joy', 'gratitude', 'smile', 'cheer', 'contentment'] },
+    { category: 'wisdom', keywords: ['wisdom', 'knowledge', 'truth', 'insight', 'learn', 'understand'] },
+    { category: 'leadership', keywords: ['lead', 'inspire', 'influence', 'guide', 'visionary', 'empower'] },
+    { category: 'courage', keywords: ['fear', 'courage', 'bravery', 'dare', 'risk', 'bold'] },
+    { category: 'faith', keywords: ['faith', 'trust', 'believe', 'spirit', 'hope', 'divine'] },
+    { category: 'discipline', keywords: ['habit', 'discipline', 'routine', 'self-control', 'structure'] },
+    { category: 'productivity', keywords: ['focus', 'work', 'task', 'productive', 'efficiency', 'priority'] },
+    { category: 'creativity', keywords: ['create', 'art', 'innovate', 'expression', 'imagination'] },
+    { category: 'resilience', keywords: ['bounce back', 'resilience', 'recover', 'rebuild', 'adapt', 'strength'] },
+    { category: 'change', keywords: ['change', 'transformation', 'evolve', 'shift', 'reinvent'] },
+    { category: 'growth', keywords: ['grow', 'improve', 'development', 'progress', 'elevate'] },
+    { category: 'freedom', keywords: ['freedom', 'liberty', 'independence', 'release'] },
+    { category: 'self-love', keywords: ['self-love', 'worth', 'value', 'confidence', 'esteem', 'self-care'] },
+    { category: 'focus', keywords: ['clarity', 'focus', 'attention', 'concentration'] }
+  ];
+
+  let bestCategory = 'inspiration';
+  let maxScore = 0;
+
+  for (const entry of categories) {
+    let score = 0;
+    for (const keyword of entry.keywords) {
+      if (t.includes(keyword)) score++;
+    }
+
+    if (score > maxScore) {
+      maxScore = score;
+      bestCategory = entry.category;
+    }
+  }
+
+  return bestCategory;
 };
+
+

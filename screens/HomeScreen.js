@@ -266,11 +266,14 @@ export default function HomeScreen() {
 
     return (
         <View style={{ flex: 1, backgroundColor: bgColor }}>
-            {/* Header */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 10, backgroundColor: bgColor, borderBottomWidth: 1, borderBottomColor: isDark ? '#444' : '#ddd' }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#7f5af0' }}>Motivation</Text>
-                <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
-                    {avatar ? <Image source={{ uri: avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} /> : <Ionicons name="person-circle-outline" size={32} color="#7f5af0" />}
+            {/* === Header Section === */}
+            <View style={{ paddingHorizontal: 20, paddingTop: 50, paddingBottom: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: themedColor }}>Daily Motivation</Text>
+
+                {/* Custom burger-style menu icon */}
+                <TouchableOpacity onPress={() => setProfileMenuVisible(true)} style={{ padding: 4 }}>
+                    <View style={{ width: 24, height: 2, backgroundColor: '#7f5af0', marginBottom: 4, borderRadius: 1 }} />
+                    <View style={{ width: 16, height: 2, backgroundColor: '#7f5af0', borderRadius: 1 }} />
                 </TouchableOpacity>
             </View>
 
@@ -326,25 +329,93 @@ export default function HomeScreen() {
             </Modal>
 
             {/* Profile Dropdown */}
-            <Modal visible={profileMenuVisible} transparent animationType="fade" onRequestClose={() => setProfileMenuVisible(false)}>
-                <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' }} onPress={() => setProfileMenuVisible(false)}>
-                    <View style={{ position: 'absolute', top: 90, right: 20, backgroundColor: bgColor, borderRadius: 10, paddingVertical: 10, width: 180, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 }}>
-                        <Pressable onPress={() => { setProfileMenuVisible(false); navigation.navigate('Profile'); }} style={{ padding: 12 }}>
+            <Modal
+                visible={profileMenuVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setProfileMenuVisible(false)}
+            >
+                <Pressable
+                    style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' }}
+                    onPress={() => setProfileMenuVisible(false)}
+                >
+                    <View
+                        style={{
+                            position: 'absolute',
+                            top: 90,
+                            right: 20,
+                            backgroundColor: bgColor,
+                            borderRadius: 10,
+                            paddingVertical: 10,
+                            width: 200,
+                            shadowColor: '#000',
+                            shadowOpacity: 0.1,
+                            shadowRadius: 10,
+                            elevation: 5,
+                        }}
+                    >
+                        {/* Avatar & Email */}
+                        {avatar && (
+                            <View style={{ alignItems: 'center', marginBottom: 10 }}>
+                                <Image
+                                    source={{ uri: avatar }}
+                                    style={{ width: 60, height: 60, borderRadius: 30 }}
+                                />
+                                {userEmail && (
+                                    <Text style={{ color: themedColor, fontSize: 14, marginTop: 4 }}>
+                                        {userEmail}
+                                    </Text>
+                                )}
+                            </View>
+                        )}
+
+                        <Pressable
+                            onPress={() => {
+                                setProfileMenuVisible(false);
+                                navigation.navigate('Profile');
+                            }}
+                            style={{ padding: 12 }}
+                        >
                             <Text style={{ color: themedColor }}>View Profile</Text>
                         </Pressable>
-                        <Pressable onPress={() => { setProfileMenuVisible(false); navigation.navigate('Favorites'); }} style={{ padding: 12 }}>
+
+                        <Pressable
+                            onPress={() => {
+                                setProfileMenuVisible(false);
+                                navigation.navigate('Favorites');
+                            }}
+                            style={{ padding: 12 }}
+                        >
                             <Text style={{ color: themedColor }}>Favorites</Text>
                         </Pressable>
-                        <Pressable onPress={() => { setProfileMenuVisible(false); navigation.navigate('Settings'); }} style={{ padding: 12 }}>
+
+                        <Pressable
+                            onPress={() => {
+                                setProfileMenuVisible(false);
+                                navigation.navigate('Settings');
+                            }}
+                            style={{ padding: 12 }}
+                        >
                             <Text style={{ color: themedColor }}>Settings</Text>
                         </Pressable>
-                        <Pressable onPress={async () => { await AsyncStorage.removeItem('currentUser'); setProfileMenuVisible(false); navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); }} style={{ padding: 12 }}>
+
+                        <Pressable
+                            onPress={async () => {
+                                await AsyncStorage.removeItem('currentUser');
+                                setProfileMenuVisible(false);
+                                navigation.reset({
+                                    index: 0,
+                                    routes: [{ name: 'Login' }],
+                                });
+                            }}
+                            style={{ padding: 12 }}
+                        >
                             <Text style={{ color: 'red' }}>Logout</Text>
                         </Pressable>
                     </View>
                 </Pressable>
             </Modal>
-
+            
             <Toast />
         </View>
     );
