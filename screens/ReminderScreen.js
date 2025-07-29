@@ -29,9 +29,6 @@ import { getQuotes } from '../database/quotesDb';
  * - Persist reminder settings and notification IDs.
  * - Send a test notification to verify notification functionality.
  * - Handles notification permissions and displays relevant alerts and toasts.
- *
- * @component
- * @returns {JSX.Element} The rendered ReminderScreen component.
  */
 export default function ReminderScreen() {
   const [enabled, setEnabled] = useState(false);
@@ -61,10 +58,6 @@ export default function ReminderScreen() {
    * Requests notification permissions from the user.
    * If permissions are not already granted, prompts the user to enable them.
    * Shows an alert if the user denies the permission request.
-   *
-   * @async
-   * @function
-   * @returns {Promise<void>} Resolves when the permission request process is complete.
    */
 
 
@@ -74,10 +67,6 @@ export default function ReminderScreen() {
    * Cancels all existing notifications, retrieves user preferences and filters quotes accordingly.
    * For each time in the provided array, schedules a notification with a random quote from the filtered list.
    * Stores notification IDs and times, and displays a success toast upon completion.
-   * 
-   * @async
-   * @param {Date[]} timeArray - Array of Date objects representing the times to schedule notifications.
-   * @returns {Promise<void>} Resolves when all notifications have been scheduled and settings saved.
    */
   const scheduleAllNotifications = async (timeArray) => {
     await cancelAllNotifications();

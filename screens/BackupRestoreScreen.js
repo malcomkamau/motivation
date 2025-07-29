@@ -15,9 +15,6 @@ import { restoreBackup } from '../utils/BackupService';
  * - Handles loading state during the restore operation.
  * - Navigates to 'AuthLoading' on successful restore, or 'Signup' if skipped.
  * - Alerts the user if the restore operation fails.
- * 
- * @function
- * @returns {JSX.Element} The rendered backup restore screen component.
  */
 export default function BackupRestoreScreen() {
   const navigation = useNavigation();
@@ -26,10 +23,6 @@ export default function BackupRestoreScreen() {
   /**
    * Handles the restore backup process.
    * Sets loading state, attempts to restore backup, and navigates or alerts based on the result.
-   * 
-   * @async
-   * @function handleRestore
-   * @returns {Promise<void>}
    */
   const handleRestore = async () => {
     setLoading(true);

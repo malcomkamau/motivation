@@ -27,9 +27,6 @@ import { getFavorites, removeFavorite } from '../database/quotesDb';
  * - Adapts UI to light/dark themes.
  * - Shows an empty state when there are no favorites.
  * 
- * @component
- * @returns {JSX.Element} The rendered FavoritesScreen component.
- * 
  * @example
  * // Usage in a navigator
  * <Stack.Screen name="Favorites" component={FavoritesScreen} />
@@ -50,10 +47,6 @@ export default function FavoritesScreen() {
    * Retrieves the user's email from AsyncStorage, fetches the associated favorites
    * using `getFavorites`, and updates the favorites state with the result.
    * Handles errors by logging them to the console.
-   *
-   * @function
-   * @async
-   * @returns {Promise<void>} Resolves when favorites are loaded and state is updated.
    */
   const loadFavorites = useCallback(async () => {
     try {

@@ -35,9 +35,6 @@ import { getUser, saveUser } from '../database/userDb';
  * - Uses React state and refs to manage form fields and original user data.
  * - Uses navigation listeners to handle unsaved changes.
  * - Uses context for theming.
- * 
- * @component
- * @returns {JSX.Element} The rendered EditProfileScreen component.
  */
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -61,10 +58,6 @@ export default function EditProfileScreen() {
      * Asynchronously loads the current user's profile data and updates the state variables.
      * Retrieves the user object using `getUser()`, then sets the name, email, bio, and avatar state.
      * Also updates the original user state and a ref for synchronization.
-     *
-     * @async
-     * @function loadProfile
-     * @returns {Promise<void>} Resolves when the profile data has been loaded and state updated.
      */
     const loadProfile = async () => {
       const user = await getUser();
@@ -84,9 +77,6 @@ export default function EditProfileScreen() {
     /**
      * Unsubscribes the navigation event listener for the 'beforeRemove' event.
      * Call this function to remove the listener and prevent memory leaks when the component unmounts.
-     *
-     * @function
-     * @returns {void}
      */
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
       const original = originalUserRef.current;
@@ -127,10 +117,6 @@ export default function EditProfileScreen() {
    * Only accepts images with .jpg, .jpeg, or .png extensions.
    * Sets the selected image URI as the avatar if valid.
    * Displays alerts if permissions are denied, an invalid image is selected, or an error occurs.
-   *
-   * @async
-   * @function pickImage
-   * @returns {Promise<void>} Resolves when the image picking process is complete.
    */
   const pickImage = async () => {
     try {
@@ -174,10 +160,6 @@ export default function EditProfileScreen() {
    * Validates that name and email are provided, updates the user profile,
    * shows success or error toasts, updates local state and ref, and navigates back on success.
    * Displays an error toast if saving fails.
-   *
-   * @async
-   * @function handleSave
-   * @returns {Promise<void>} Resolves when the save operation is complete.
    */
   const handleSave = async () => {
     if (!name.trim() || !email.trim()) {

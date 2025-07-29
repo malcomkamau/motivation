@@ -34,9 +34,6 @@ import { createBackup, restoreBackup } from '../utils/BackupService';
  * - Custom hooks: useThemeContext.
  * - Utility functions: getUserByEmail, getAvailableCategories, getQuotes, createBackup, restoreBackup.
  * - UI libraries: react-native, react-native-animatable, Ionicons.
- *
- * @component
- * @returns {JSX.Element} The rendered profile screen.
  */
 export default function ProfileScreen() {
   const navigation = useNavigation();

@@ -26,10 +26,6 @@ import { backupExists, restoreBackup } from '../utils/BackupService';
  * - Fetches motivational quotes from local storage or an API, and displays a random quote as a loading screen.
  * - Handles offline scenarios by displaying stored quotes if available, or prompts the user to retry when online.
  * - Navigates to the appropriate screen ('Home', 'Login', or 'BackupRestore') based on user state and backup existence.
- * - Animates UI elements for a smooth user experience.
- * 
- * @function
- * @returns {JSX.Element} The rendered loading/authentication screen.
  */
 export default function AuthLoadingScreen() {
   const navigation = useNavigation();
@@ -46,10 +42,6 @@ export default function AuthLoadingScreen() {
    * Retrieves the current user's email from AsyncStorage. If an email is found,
    * navigates to the 'Home' screen; otherwise, navigates to the 'Login' screen.
    * Resets the navigation stack to prevent going back to the previous screens.
-   *
-   * @async
-   * @function proceedToApp
-   * @returns {Promise<void>} Resolves when navigation is complete.
    */
   const proceedToApp = async () => {
     const email = await AsyncStorage.getItem('currentUser');
@@ -64,10 +56,6 @@ export default function AuthLoadingScreen() {
    * - If connected and fewer than 500 quotes are stored, fetches more quotes from the API.
    * - Selects a random quote from stored quotes to display as the "quote of the day".
    * - Handles offline and error scenarios with appropriate alerts and state updates.
-   * 
-   * @async
-   * @function fetchAndStoreQuotes
-   * @returns {Promise<void>} Resolves when the operation is complete.
    */
   const fetchAndStoreQuotes = async () => {
     setIsLoading(true);
@@ -106,9 +94,6 @@ export default function AuthLoadingScreen() {
   /**
    * Triggers a fade-in animation by animating the `fadeAnim` value to 1 over 800 milliseconds.
    * Uses the native driver for better performance.
-   *
-   * @function
-   * @returns {void}
    */
   const fadeIn = () => {
     Animated.timing(fadeAnim, {
@@ -150,8 +135,6 @@ export default function AuthLoadingScreen() {
      * Unsubscribes from the network state change listener.
      * Call this function to remove the event listener registered by NetInfo.addEventListener,
      * preventing memory leaks and unnecessary updates when the component unmounts or the listener is no longer needed.
-     *
-     * @function
      */
     const unsubscribe = NetInfo.addEventListener((state) => {
       if (state.isConnected && isWaitingForInternet) {
